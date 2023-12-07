@@ -1,0 +1,58 @@
+import helper as h
+
+def update_scratchcards(winning, numbers, card_id, scratchcards_instances):
+    next_scratchcard = card_id + 1
+    tmp_done_winners = []
+    
+    print("Card {}: Checking: {} for winning numbers: {}".format(card_id, numbers, winning))
+    for number in numbers:
+        if number in winning:
+            if number not in tmp_done_winners: # in case of duplicate winning numbers (shouldn't be possible?)
+                tmp_done_winners.append(number)
+                if next_scratchcard not in scratchcards_instances:
+                    print(" > Found: {} in winnings, adding 1 copy of card {}".format(number, next_scratchcard))
+                    scratchcards_instances[next_scratchcard] = 1
+                else:
+                    # calculate amount of copies
+                    amount_of_copies = scratchcards_instances[card_id]
+                    copies_to_be_added = 1*amount_of_copies
+                    print(" > Found: {} in winnings, adding {} copies of card {} (total {} instances of card {})".format(number,copies_to_be_added,next_scratchcard,amount_of_copies,card_id))
+                    scratchcards_instances[next_scratchcard] += copies_to_be_added
+                next_scratchcard += 1
+
+    return scratchcards_instances
+
+def sum_scratchcard_instances(scratchcards):
+    sum = 0
+    for card in scratchcards:
+        sum += scratchcards[card]
+    return sum
+
+if __name__ == "__main__":
+    path = "./inputs/4.txt"
+    test = "./inputs/4-test.txt"
+
+    lines = h.read_file(test)
+    sum = 0
+    scratchcards_instances = {}
+
+    for idx, line in enumerate(lines):
+        print("----------NEXT CARD---------------")
+        # add the original card
+        if idx+1 not in scratchcards_instances:
+            print("Card {}: 1 original and 0 copies\n".format(idx+1))
+            scratchcards_instances[idx+1] = 1
+        else: 
+            # add original card to the existing copies
+            print("Card {}: 1 original and {} copies = {} total instances\n".format(idx+1,scratchcards_instances[idx+1], scratchcards_instances[idx+1]+1))
+            scratchcards_instances[idx+1] += 1
+
+        card_numbers = line.split(": ")[1]
+        winning = list(filter(lambda x: x.isdigit(), card_numbers.split(" | ")[0].split(" ")))
+        numbers = list(filter(lambda x: x.isdigit(), card_numbers.split(" | ")[1].split(" ")))
+        scratchcards_instances = update_scratchcards(winning, numbers, idx+1, scratchcards_instances)
+
+        print("\nScratchcards so far:\n{}\n".format(scratchcards_instances))
+        
+
+    print("Sum of scratchcards: {}".format(sum_scratchcard_instances(scratchcards_instances)))

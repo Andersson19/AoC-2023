@@ -3,7 +3,7 @@ def read_file(path):
     lines = file.readlines()
     return [x.strip() for x in lines]
 
-def print_lines(path):
+def print_file(path):
     file = open(path,'r')
     for line in file.readlines():
         print(line)
