@@ -1,4 +1,5 @@
 import helper as h
+from itertools import combinations
 
 seed_to_soil   = {}
 soil_to_fert   = {}
@@ -41,23 +42,36 @@ def init_mappings(lines):
                 source_start = int(values[1])
                 value_range = int(values[2])
                 
-                curr_map[source_start] = {"start": destination_start, "count": value_range}
+                curr_map[destination_start] = {"start": source_start, "count": value_range}
 
     # print(f"{curr_map}\n")
 
-def get_destination(start, mapping):
+def get_source(location, mapping):
+    print(mapping)
+    new_location = location
+    for destination in mapping:
+        if location >= destination:
+            dest_max = destination + mapping[destination]["count"]
+            if location < dest_max:
+                tmp = location - destination
+                new_location = tmp + mapping[destination]["start"]
+                break
+
+    print(f"{location} -> {new_location}")
+    return new_location
+
     destination = start
     for source in mapping:
-        print("Restarting")
-        print(f"{start} > {source} (greater than source?)")
+        # print("Restarting")
+        # print(f"{start} > {source} (greater than source?)")
         if start >= source:
-            print(f"{start} < {source+mapping[source]['count']} (less than source + count?)")
+            # print(f"{start} < {source+mapping[source]['count']} (less than source + count?)")
             if start < source+mapping[source]["count"]:
                 diff = start - source
-                print(f"{start} - {source} = {diff} (diff)")
+                # print(f"{start} - {source} = {diff} (diff)")
                 destination = mapping[source]["start"] + diff
-                print(f"{mapping[source]['start']} + diff = {destination} (destination)")
-                print(f"Returning: {destination}")
+                # print(f"{mapping[source]['start']} + diff = {destination} (destination)")
+                # print(f"Returning: {destination}")
                 break
     
     return destination
@@ -78,22 +92,26 @@ def get_mapping_by_id(idx):
             return "humidity"
         case 6:
             return "location"
-        
-def find_location(seed):
-    curr_location = seed
-
-    st = "\nSeed " + str(seed) + ", "
+    
+def find_seed(location):
+    curr_location = location
+    mappings.reverse()
     for idx, map in enumerate(mappings):
-        st += get_mapping_by_id(idx) + " "
-
         curr_map = get_mapping(map)
 
-        curr_location = get_destination(curr_location,curr_map)
+        curr_location = get_source(curr_location, curr_map)
 
-        st += str(curr_location) + ", "
-
-    print(st[:-1])
     return curr_location
+
+def found_seed(location, seed_ranges):
+    seed = find_seed(location)
+
+    print(f"Location {location} gave seed {seed}..")
+    for range in seed_ranges:
+        print(f" > Checking if seed {seed} is in {range}..")
+        if seed in range:
+            return True
+    return False
     
 
 if __name__ == "__main__":
@@ -106,34 +124,23 @@ if __name__ == "__main__":
     seeds = []
 
     for i in range(0, len(tmp_seeds), 2):
-        start = int(tmp_seeds[i])
-        stop = int(tmp_seeds[i]) + int(tmp_seeds[i+1])
-        for n in range(start, stop):
-            seeds.append(n)
-
-    print(seeds)
+        r = [int(tmp_seeds[i]), int(tmp_seeds[i]) + int(tmp_seeds[i+1])]
+        seeds.append(r)
 
     lines = lines[2:]
 
     init_mappings(lines)
 
-    lowest = -1
     location = 0
-    for id, seed in enumerate(seeds):
-        print(f"Current seed: {seed}")
-        print(f"Remaining seeds: {seeds[id+1:]}")
-        seed = int(seed)
-        if lowest == -1:
-            lowest = find_location(seed)
-            print(f"\n\n----------------NEW LOW------------------\n\tprevious: (none)\n\tnew: {lowest}\n-----------------------------------------")
+    done = False
+    while not done:  
+        if found_seed(location, seeds):
+            print(f"Lowest location: {location}")
+            done = True
         else:
-            location = find_location(seed)
+            location += 3
+            continue
 
-            if location < lowest:
-                print(f"\n\n----------------NEW LOW------------------\n\tprevious: {lowest}\n\tnew: {location}\n-----------------------------------------")
-                lowest = location
-
-    print(f"Lowest location: {lowest}")
 
         
 
